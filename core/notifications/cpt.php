@@ -154,8 +154,13 @@ class CPT extends Notification_Type {
 			$cpt_obj = get_post_type_object( $cpt->post_type );
 
 			// Build notification
-			$message = __( ':memo: The %s *<%s|%s>* was created right now!', 'dorzki-notifications-to-slack' );
-			$message = sprintf( $message, $cpt_obj->labels->singular_name, get_permalink( $cpt->ID ), $cpt->post_title );
+			$excerpt = wp_trim_words( $cpt->post_content );
+			if ( 500 < strlen( $excerpt ) ) {
+				$excerpt = substr( $excerpt, 0, 500 );
+			}
+
+			$message = __( ':memo: The %s *<%s|%s>* was created right now!%s%s', 'dorzki-notifications-to-slack' );
+			$message = sprintf( $message, $cpt_obj->labels->singular_name, get_permalink( $cpt->ID ), $cpt->post_title, PHP_EOL, $excerpt );
 
 			$attachments = [
 				[
@@ -213,8 +218,13 @@ class CPT extends Notification_Type {
 		$cpt_obj = get_post_type_object( $cpt->post_type );
 
 		// Build notification
-		$message = __( ':memo: The %s *<%s|%s>* was published right now!', 'dorzki-notifications-to-slack' );
-		$message = sprintf( $message, $cpt_obj->labels->singular_name, get_permalink( $cpt->ID ), $cpt->post_title );
+		$excerpt = wp_trim_words( $cpt->post_content );
+		if ( 500 < strlen( $excerpt ) ) {
+			$excerpt = substr( $excerpt, 0, 500 );
+		}
+
+		$message = __( ':memo: The %s *<%s|%s>* was published right now!%s%s', 'dorzki-notifications-to-slack' );
+		$message = sprintf( $message, $cpt_obj->labels->singular_name, get_permalink( $cpt->ID ), $cpt->post_title, PHP_EOL, $excerpt );
 
 		$attachments = [
 			[
@@ -344,7 +354,7 @@ class CPT extends Notification_Type {
 	 * @return bool
 	 */
 	public function cpt_updated( $cpt ) {
-error_log("updated 2");
+;
 		if ( empty( $cpt ) || ! is_object( $cpt ) ) {
 			return false;
 		}
@@ -359,8 +369,13 @@ error_log("updated 2");
 		$user    = get_user_by( 'id', $user_id );
 
 		// Build notification
-		$message = __( ':cop: The %s *<%s|%s>* has been updated right now.', 'dorzki-notifications-to-slack' );
-		$message = sprintf( $message, $cpt_obj->labels->singular_name, get_permalink( $cpt->ID ), $cpt->post_title );
+		$excerpt = wp_trim_words( $cpt->post_content );
+		if ( 500 < strlen( $excerpt ) ) {
+			$excerpt = substr( $excerpt, 0, 500 );
+		}
+
+		$message = __( ':memo: The %s *<%s|%s>* was updated right now!%s%s', 'dorzki-notifications-to-slack' );
+		$message = sprintf( $message, $cpt_obj->labels->singular_name, get_permalink( $cpt->ID ), $cpt->post_title, PHP_EOL, $excerpt );
 
 		$attachments = [
 			[
