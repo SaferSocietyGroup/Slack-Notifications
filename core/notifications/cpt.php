@@ -72,6 +72,15 @@ class CPT extends Notification_Type {
 			$this->object_type    = 'cpt_' . $post_type;
 			$this->object_label   = $cpt->labels->name;
 			$this->object_options = [
+				'create_cpt'     => [
+					'label'    => sprintf( esc_html__( '%s Created', 'dorzki-notifications-to-slack' ), $cpt->labels->singular_name ),
+					'hooks'    => [
+						'wp_insert_post'    => 'cpt_created_new',
+						'auto-draft_to_draft'    => 'cpt_created_auto_to_draft',
+					],
+					'priority' => 10,
+					'params'   => 3,
+				],
 				'new_cpt'     => [
 					'label'    => sprintf( esc_html__( '%s Published', 'dorzki-notifications-to-slack' ), $cpt->labels->singular_name ),
 					'hooks'    => [
@@ -125,6 +134,64 @@ class CPT extends Notification_Type {
 
 	}
 
+	/**
+	 * Post notification when a new cpt has been created.
+	 *
+	 * @param $cpt
+	 *
+	 * @return bool
+	 */
+	public function cpt_created_auto_to_draft($cpt)
+	{
+			if ( empty( $cpt ) || ! is_object( $cpt ) ) {
+				return false;
+			}
+
+			if ( in_array( $cpt->post_type, $this->ignore_cpts ) ) {
+				return false;
+			}
+
+			$cpt_obj = get_post_type_object( $cpt->post_type );
+
+			// Build notification
+			$message = __( ':memo: The %s *<%s|%s>* was created right now!', 'dorzki-notifications-to-slack' );
+			$message = sprintf( $message, $cpt_obj->labels->singular_name, get_permalink( $cpt->ID ), $cpt->post_title );
+
+			$attachments = [
+				[
+					'title' => sprintf( esc_html__( '%s Author', 'dorzki-notifications-to-slack' ), $cpt_obj->labels->singular_name ),
+					'value' => get_the_author_meta( 'display_name', $cpt->post_author ),
+					'short' => true,
+				],
+				[
+					'title' => esc_html__( 'Created Date', 'dorzki-notifications-to-slack' ),
+					'value' => get_the_date( null, $cpt->ID ),
+					'short' => true,
+				],
+			];
+
+			$channel = $this->get_notification_channel( __FUNCTION__ );
+
+			return $this->slack_bot->send_message( $message, $attachments, [
+				'color'   => '#9b59b6',
+				'channel' => $channel,
+			] );
+	}
+
+	/**
+	 * Post notification when a new cpt has been created.
+	 *
+	 * @param $cpt
+	 *
+	 * @return bool
+	 */
+	public function cpt_created_new(  $post_id, $cpt, $update ) {
+		if ( !$update && get_post_status($cpt->ID) != 'auto-draft') {
+			return $this->cpt_created_auto_to_draft($cpt);
+		}
+
+		return false;
+	}
 
 	/**
 	 * Post notification when a new cpt has been posted.
@@ -277,7 +344,7 @@ class CPT extends Notification_Type {
 	 * @return bool
 	 */
 	public function cpt_updated( $cpt ) {
-
+error_log("updated 2");
 		if ( empty( $cpt ) || ! is_object( $cpt ) ) {
 			return false;
 		}
@@ -292,7 +359,7 @@ class CPT extends Notification_Type {
 		$user    = get_user_by( 'id', $user_id );
 
 		// Build notification
-		$message = __( ':pencil2: The %s *<%s|%s>* has been updated right now.', 'dorzki-notifications-to-slack' );
+		$message = __( ':cop: The %s *<%s|%s>* has been updated right now.', 'dorzki-notifications-to-slack' );
 		$message = sprintf( $message, $cpt_obj->labels->singular_name, get_permalink( $cpt->ID ), $cpt->post_title );
 
 		$attachments = [
