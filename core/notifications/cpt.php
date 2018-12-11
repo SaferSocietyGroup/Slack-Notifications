@@ -141,13 +141,16 @@ class CPT extends Notification_Type {
 	 *
 	 * @return bool
 	 */
-	public function cpt_created_auto_to_draft($cpt)
-	{
+	public function cpt_created_auto_to_draft($cpt) {
 			if ( empty( $cpt ) || ! is_object( $cpt ) ) {
 				return false;
 			}
 
 			if ( in_array( $cpt->post_type, $this->ignore_cpts ) ) {
+				return false;
+			}
+
+			if ( !$this->notificationExists($cpt->post_type, __FUNCTION__ ) ) {
 				return false;
 			}
 
@@ -215,6 +218,10 @@ class CPT extends Notification_Type {
 			return false;
 		}
 
+		if ( !$this->notificationExists($cpt->post_type, __FUNCTION__ ) ) {
+			return false;
+		}
+
 		$cpt_obj = get_post_type_object( $cpt->post_type );
 
 		// Build notification
@@ -263,6 +270,10 @@ class CPT extends Notification_Type {
 		}
 
 		if ( in_array( $cpt->post_type, $this->ignore_cpts ) ) {
+			return false;
+		}
+
+		if ( !$this->notificationExists($cpt->post_type, __FUNCTION__ ) ) {
 			return false;
 		}
 
@@ -317,6 +328,10 @@ class CPT extends Notification_Type {
 			return false;
 		}
 
+		if ( !$this->notificationExists($cpt->post_type, __FUNCTION__ ) ) {
+			return false;
+		}
+
 		$cpt_obj = get_post_type_object( $cpt->post_type );
 
 		// Build notification
@@ -354,12 +369,16 @@ class CPT extends Notification_Type {
 	 * @return bool
 	 */
 	public function cpt_updated( $cpt ) {
-;
+
 		if ( empty( $cpt ) || ! is_object( $cpt ) ) {
 			return false;
 		}
 
 		if ( in_array( $cpt->post_type, $this->ignore_cpts ) ) {
+			return false;
+		}
+
+		if ( !$this->notificationExists($cpt->post_type, __FUNCTION__ ) ) {
 			return false;
 		}
 
@@ -420,6 +439,10 @@ class CPT extends Notification_Type {
 			return false;
 		}
 
+		if ( !$this->notificationExists($cpt->post_type, __FUNCTION__ ) ) {
+			return false;
+		}
+
 		$cpt_obj = get_post_type_object( $cpt->post_type );
 
 		// Build notification
@@ -446,6 +469,28 @@ class CPT extends Notification_Type {
 			'channel' => $channel,
 		] );
 
+	}
+
+	/**
+	 * Check if valid notification exists for given postType.
+	 *
+	 * @param $postType
+	 * @param $notificationFunctionName
+	 *
+	 * @return bool
+	 */
+	private function notificationExists($postType, $notificationFunctionName) {
+		$notifications = self::get_notifications();
+
+		if ( ! empty( $notifications ) ) {
+			foreach ( $notifications as $notification ) {
+				if( $notification->type == 'cpt_'.$postType &&
+					in_array( $notificationFunctionName, $this->object_options[$notification->action]['hooks']) ) {
+						return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }
